@@ -20,6 +20,11 @@ When Codex CLI stops after a model-capacity error, someone has to type "continue
 
 This guard watches the specific capacity error in your active iTerm2 Codex session, then retries with a bounded delay.
 
+**Animated workflow (illustration, not a real end-to-end recording):**
+
+![codexcontinue workflow: capacity error → check idle prompt → backoff → continue → new episode](assets/codexcontinue-workflow.gif)
+
+
 ## Recommended: install by chatting with an AI
 
 **No terminal experience needed**—if your AI assistant can actually access your Mac's files and shell (for example, a local Codex session, or ChatGPT with an authorized local-computer connector), copy and send this message:
@@ -156,5 +161,48 @@ The guard needs no OpenAI API key and has no separate telemetry service.
 - If the error is not on the visible terminal screen, it may not be detected.
 - Five failed retries require manual attention; no automatic model switching.
 - Codex Stop hooks may not fire for server overloads, so this tool observes iTerm2 directly.
+
+## FAQ: After five failed retries, will it ever retry again?
+
+**Yes, if the earlier capacity-waiting state has cleared for at least 120 seconds.** Five attempts is a limit for an ongoing error episode within the same iTerm2 session—not a permanent lifetime quota.
+
+For example, Codex hits model capacity → guard automatically retries five times → you manually continue successfully → Codex is no longer at its capacity-error waiting prompt for at least **120 seconds** → a later capacity error starts a fresh episode with up to five new retries.
+
+**Important caveat:** If the error returns **before the full 120-second clear interval**, the previous counter may still apply. If it was already exhausted, the guard may not try again. The process must remain running and observing that session to reset the counter normally.
+
+## How do I see automatic "continue" history?
+
+Ask an AI with access to your Mac:
+
+> Read ~/.local/state/codex-capacity-guard/supervisor.log and summarize all recent "Sent continuation" events, timestamps, retry numbers and any "Maximum retries reached" events. Do not touch my Codex sessions.
+
+Or run the bundled service-status script, which now shows the five most recent send events found in the current/rotated logs:
+
+~~~bash
+bash scripts/status.sh
+~~~
+
+To filter raw log lines:
+
+~~~bash
+grep 'Sent continuation' ~/.local/state/codex-capacity-guard/supervisor.log
+~~~
+
+- **Capacity error on session**: warning detected; initial retry wait begins.
+- **Sent continuation**: the guard **attempted to send** text to the original iTerm2 session, with attempt number, e.g. 1/5.
+- **Maximum retries reached**: the episode hit its cap.
+- **Started: Codex CLI only**: the watcher has started, not necessarily sent anything.
+
+"Sent continuation" proves a send call was attempted, **not** that Codex accepted it, successfully resumed or finished the task. The logs rotate (one current file and up to two backups), so the retained history is not permanent.
+
+## Is it a timer? Does it consume resources? When does it stop?
+
+It runs as **one background Python process** managed by a standard macOS per-user **LaunchAgent**. Python's **asyncio** event loop polls the iTerm2 Python API every **5 seconds**. It is **not a cron job** or a fresh process launched every five seconds.
+
+In one observed macOS setup, the guard used about **22 MB resident memory (RSS)** and showed **0.0% CPU** at an idle instant. Usage varies with terminal window count, screen contents and host. The polling is lightweight, but not zero-cost. The watcher itself makes **no OpenAI model calls**; when it submits "continue", subsequent Codex work may use your model quota and local resources.
+
+**The watchdog does not stop when Codex stops or finishes its task**: it stays running and waits for future sessions, even when none are active. It stops on manual disable/uninstall, user logout or shutdown; if it crashes, the LaunchAgent normally restarts it (KeepAlive). It starts when the user logs in, not as a system daemon before login.
+
+The GIF is illustrative. Developers can regenerate it from the repository on macOS using **python3 scripts/render_flow.py** after installing Pillow; Pillow is not required to run the watchdog.
 
 **License:** MIT. **Not affiliated with or endorsed by OpenAI or iTerm2.**

@@ -76,6 +76,27 @@ class RetryTests(unittest.TestCase):
         self.assertNotIn("s", state)
         self.assertFalse(retry_decision(state, "s", True, 161)[0])
 
+    def test_five_failed_retries_then_manual_recovery_resets_after_120_seconds(self):
+        state = {}
+        sid = "same-iterm-session"
+        now = 0.0
+        retry_decision(state, sid, True, now)
+        now = 30.0
+        for attempts in range(5):
+            self.assertEqual(retry_decision(state, sid, True, now), (True, attempts))
+            mark_sent(state, sid, attempts, now)
+            now += RETRY_DELAYS[min(attempts + 1, 4)]
+        self.assertEqual(retry_decision(state, sid, True, now), (False, 5))
+        # User manually continues and terminal is no longer showing the error.
+        retry_decision(state, sid, False, now)
+        retry_decision(state, sid, False, now + 119)
+        self.assertIn(sid, state)
+        retry_decision(state, sid, False, now + 120)
+        self.assertNotIn(sid, state)
+        # Next capacity error in the SAME iTerm session starts a new round.
+        self.assertEqual(retry_decision(state, sid, True, now + 121), (False, 0))
+        self.assertEqual(retry_decision(state, sid, True, now + 151), (True, 0))
+
     def test_multiple_sessions_are_independent(self):
         state = {}
         retry_decision(state, "a", True, 0)

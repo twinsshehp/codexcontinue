@@ -43,6 +43,16 @@ else
   echo "   查看 $ERR"
 fi
 
+echo
+echo "最近自动发送“继续”的记录（包含最多两份轮转日志）："
+RECENT_SENDS="$(grep -h 'Sent continuation' "$STATE_DIR"/supervisor.log* 2>/dev/null | sort | tail -n 5 || true)"
+if [[ -n "$RECENT_SENDS" ]]; then
+  printf '%s\n' "$RECENT_SENDS"
+else
+  echo "暂未发现自动发送记录（并不代表历史上从未发送，日志可能已轮转或清理）"
+fi
+echo "更多记录：grep 'Sent continuation' ~/.local/state/codex-capacity-guard/supervisor.log"
+
 if [[ -s "$ERR" ]]; then
   echo "⚠️ 最近的错误日志（可能包含历史记录）："
   tail -n 8 "$ERR"
