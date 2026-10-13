@@ -4,13 +4,14 @@
 
 ## 目标
 
-将 [codexcontinue](https://github.com/twinsshehp/codexcontinue) 安装到用户当前 Mac：监测 iTerm2 中 Codex CLI 的 `Selected model is at capacity` 报错，并按有限次数自动续跑。
+将 [codexcontinue](https://github.com/twinsshehp/codexcontinue) 安装到用户当前 Mac：监测 iTerm2 中 Codex CLI 的 `Selected model is at capacity` 报错，在安全检查后默认只提交 `继续` + Enter，并按有限次数自动重试。
 
 ### 绝对不要做的事
 
 - 不运行 `sudo`、不绕过 macOS TCC 权限、不擅自修改安全设置。
 - 不擅自结束、重启用户正在使用的 iTerm2、Codex CLI 或其他服务。
 - 不自动启用 Codex `--yolo` 或改变模型、Codex Hooks、审批策略。
+- **不修改用户的 `~/.codex/AGENTS.md`、`~/.codex/config.toml`、全局 Skill 或任何已有 Codex 配置**，不要为了让 Codex “认识” codexcontinue 而注入全局指令。`AGENTS.md` 只位于这个 GitHub 仓库内，供安装时阅读。
 - 不在已存在的仓库里直接覆盖未提交的用户修改。
 - 不泄露本机环境变量、API Key、日志、令牌等内容。
 - 未验证成功时，不得对用户说“已经安装成功”。
@@ -27,6 +28,8 @@
 8. **不要制造容量报错。** 默认只做安装、状态及单元测试，绝不往用户现有 Codex 会话里发送测试“继续”；只有用户明确同意才做实际交互测试。
 
 ## AI 停止 / 恢复 / 查看状态（不依赖仓库路径）
+
+**codexcontinue 是后台监工，不是一个必须在进程列表中出现为 codexcontinue 的进程。** 实际服务标签为 `com.peakmain.codex-capacity-guard`，Python 脚本运行在安装目录；管理时无需按名称搜索进程或修改 Codex 配置。
 
 **安装后的固定位置**，不论最初安装在哪个 Git 仓库目录，管理脚本都位于：
 

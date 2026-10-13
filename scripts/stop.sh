@@ -22,7 +22,8 @@ for attempt in {1..20}; do
   if ! launchctl print "$TARGET" 2>/dev/null | grep -q 'state = running'; then
     echo "✅ codexcontinue 已停止。重新打开 iTerm2 也不会自动恢复。"
     echo "✅ Codex CLI 和 iTerm2 不受影响。"
-    echo "如需恢复：bash scripts/start.sh（或直接告诉有本机权限的 AI“恢复 codexcontinue”）。"
+    echo "如需恢复：bash \"$HOME/Library/Application Support/CodexCapacityGuard/scripts/start.sh\""
+echo "或者直接告诉有本机权限的 AI：恢复 codexcontinue。"
     exit 0
   fi
   sleep 0.25

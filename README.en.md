@@ -108,7 +108,7 @@ The guard does **not** need to display a terminal window. Startup appears in the
 
 The default message is:
 
-> Continue the previous unfinished task. Check the work already done first; do not repeat completed steps. Stop and ask the user if approval is needed.
+> 继续
 
 You can add **CAPACITY_GUARD_MESSAGE** to the LaunchAgent's **EnvironmentVariables** dictionary if you prefer another one-line prompt; then reload the LaunchAgent. Don't use it to circumvent approvals.
 
@@ -122,7 +122,7 @@ You can add **CAPACITY_GUARD_MESSAGE** to the LaunchAgent's **EnvironmentVariabl
 
 This is relative to the user's home directory. You do not need to know where the GitHub repository was cloned.
 
-**Ask an AI that has authorized local Mac access:**
+**Ask an AI that has authorized local Mac access.** Explain that **codexcontinue is an installed background watcher**, not a built-in Codex command or a process necessarily named codexcontinue. The AI should use the installed scripts and must not modify Codex configuration.
 
 > Stop codexcontinue. On my Mac run `$HOME/Library/Application Support/CodexCapacityGuard/scripts/stop.sh`, then verify using status.sh in the same directory. Do not close iTerm2 or stop Codex. Stay disabled until I explicitly resume.
 

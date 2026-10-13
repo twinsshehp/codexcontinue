@@ -8,6 +8,7 @@ from types import SimpleNamespace
 
 from capacity_guard import (
     RETRY_DELAYS,
+    DEFAULT_MESSAGE,
     is_capacity_waiting,
     mark_sent,
     retry_decision,
@@ -143,6 +144,9 @@ class RetryTests(unittest.TestCase):
 
 
 class SubmitTests(unittest.IsolatedAsyncioTestCase):
+    def test_default_message_is_only_continue(self):
+        self.assertEqual(DEFAULT_MESSAGE, "继续")
+
     async def test_continuation_uses_separate_enter_call(self):
         class FakeSession:
             def __init__(self):
@@ -155,10 +159,10 @@ class SubmitTests(unittest.IsolatedAsyncioTestCase):
         async def skip_wait(seconds):
             self.assertGreater(seconds, 0)
         with patch("capacity_guard.asyncio.sleep", side_effect=skip_wait):
-            await submit_continuation(session, "Continue previous task.")
+            await submit_continuation(session, DEFAULT_MESSAGE)
         self.assertEqual(
             session.sent,
-            [("Continue previous task.", True), ("\r", True)],
+            [(DEFAULT_MESSAGE, True), ("\r", True)],
         )
 
 

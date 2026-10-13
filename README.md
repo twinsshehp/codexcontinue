@@ -96,13 +96,15 @@ tail -f ~/.local/state/codex-capacity-guard/supervisor.log
 | 自动切换模型 | 不支持，也不会擅自切换 |
 | 适用范围 | macOS iTerm2 内的 Codex CLI |
 
-默认自动发送一条英语指令，要求 Codex 检查先前进度后继续执行，避免重复已完成操作。你也可以在 LaunchAgent 的 **EnvironmentVariables** 里添加 **CAPACITY_GUARD_MESSAGE** 自定义单行文本，重载后生效。
+**默认续跑只发送 `继续` 两个字，然后单独按 Enter 提交。** 不会额外补充任务指令，也不会改变你的原始任务。若确有需要，可自行设置 LaunchAgent 的 `CAPACITY_GUARD_MESSAGE` 环境变量覆盖默认内容。
 
 ## 如何主动停止、恢复或卸载？（支持 AI 对话和脚本）
 
 **主动停止不是退出 iTerm2。** 退出 iTerm2 时监工会暂时停止，下次启动 iTerm2 时恢复；而**主动停止会被记住**，即使关闭/重开 iTerm2，或者重新登录 Mac，也不会悄悄恢复。
 
 ### 最简单：直接告诉有本机操作权限的 AI
+
+**重要：`codexcontinue` 是 macOS 后台监工工具，不是 Codex 自带的指令，也不一定是叫 codexcontinue 的进程。** 管理它时应该运行安装后的脚本，**不要通过进程名搜索或修改 Codex 配置**。
 
 **不用记住仓库在哪里。** 安装后管理脚本会被复制到每位用户自己的固定目录：
 
@@ -114,15 +116,15 @@ tail -f ~/.local/state/codex-capacity-guard/supervisor.log
 
 **停止监工，直接发给 AI：**
 
-> 帮我停止 codexcontinue 监工。在我的 Mac 上运行 `$HOME/Library/Application Support/CodexCapacityGuard/scripts/stop.sh`，再运行同目录的 status.sh 确认状态。不要退出 iTerm2，不要停止 Codex 任务，保持主动停用状态。
+> codexcontinue 是我 Mac 上安装的后台监工，不是 Codex 的内置命令，也不是要按名字搜索的进程。请直接在本机运行 `bash "$HOME/Library/Application Support/CodexCapacityGuard/scripts/stop.sh"`，再执行同目录的 status.sh 检查是否停止。不要退出 iTerm2，不要停止 Codex，不要修改 Codex 配置。
 
 **恢复监工，直接发给 AI：**
 
-> 帮我恢复 codexcontinue 监工。在我的 Mac 上运行 `$HOME/Library/Application Support/CodexCapacityGuard/scripts/start.sh`，再运行同目录的 status.sh 确认运行。不用重启 Codex。
+> codexcontinue 是我 Mac 的后台监工。请运行 `bash "$HOME/Library/Application Support/CodexCapacityGuard/scripts/start.sh"`，再运行同目录的 status.sh 检查运行状态；不要重新启动 Codex。
 
 **查询状态或最近的续跑记录：**
 
-> 帮我读取 `$HOME/Library/Application Support/CodexCapacityGuard/scripts/status.sh` 的检查结果。只读查询，不要擅自启动已经停止的监工。
+> codexcontinue 是我 Mac 的后台监工。请执行 `bash "$HOME/Library/Application Support/CodexCapacityGuard/scripts/status.sh"` 查询运行状态和最近发送“继续”的记录。只读查询，不要启动已停止的监工。
 
 以上要求 AI 已获准操作用户的 Mac。只有网页聊天、没有本机工具的 AI 无法执行。
 

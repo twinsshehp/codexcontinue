@@ -28,7 +28,8 @@ if [[ -f "$DISABLED" ]]; then
     exit 2
   fi
   echo "⏸️ 已被用户主动停止，不会随 iTerm2 启动。"
-  echo "✅ 恢复方式：bash scripts/start.sh，或对有本机权限的 AI 说“恢复 codexcontinue”。"
+  echo "✅ 恢复方式：bash \"$HOME/Library/Application Support/CodexCapacityGuard/scripts/start.sh\""
+  echo "也可以对有本机权限的 AI 说“恢复 codexcontinue”。"
   exit 0
 fi
 

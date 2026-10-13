@@ -66,7 +66,7 @@ def base_image(idx, frac):
         d.text((70, 388), "›", font=HEAD, fill=WHITE)
         if idx == 2:
             count = max(0, int((1-frac)*30))
-            d.text((102, 394), "继续上一条未完成任务...", font=TEXT, fill=GREEN)
+            d.text((102, 394), "继续", font=TEXT, fill=GREEN)
             d.text((70, 442), f"自动续跑指令提交中  {int(frac*100)}%", font=SMALL, fill=MUTED)
     else:
         d.text((70, 288), "✓ 任务正在继续执行", font=HEAD, fill=GREEN)

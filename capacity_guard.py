@@ -30,10 +30,8 @@ DISABLED_FILE = (
 POLL_SECONDS = 5
 RETRY_DELAYS = (30, 60, 120, 240, 300)
 CLEAR_SECONDS = 120
-DEFAULT_MESSAGE = (
-    "Continue the previous unfinished task. Check the work already done first; "
-    "do not repeat completed steps. Stop and ask the user if approval is needed."
-)
+# This is intentionally short: the model already has task context.
+DEFAULT_MESSAGE = "继续"
 
 # Match the rendered capacity warning, not arbitrary mentions in the conversation.
 CAPACITY_WARNING = re.compile(

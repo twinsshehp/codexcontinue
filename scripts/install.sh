@@ -57,7 +57,7 @@ launchctl bootstrap "gui/$UID_NUM" "$PLIST"
 echo "✅ 已注册并请求启动后台监工：$LABEL"
 if [[ -f "$BASE/disabled" ]]; then
   echo "⏸️ 检测到用户此前主动停止监工；重新安装不会擅自恢复。"
-  echo "   如需恢复，请运行 bash scripts/start.sh 或让 AI 帮你恢复。"
+  echo "   如需恢复，请运行 bash \"$BASE/scripts/start.sh\" 或让 AI 帮你恢复。"
 else
   echo "✅ 监工现在跟随 iTerm2：关闭 iTerm2 后退出，再打开 iTerm2 时自动启动。"
 fi
