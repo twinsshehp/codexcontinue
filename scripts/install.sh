@@ -24,7 +24,7 @@ cp "$ROOT/capacity_guard.py" "$BASE/capacity_guard.py"
 # Keep management scripts in a stable location even if the checkout is moved
 # or deleted. AI assistants can always find them there.
 mkdir -p "$BASE/scripts"
-for name in start stop status; do
+for name in start stop status uninstall; do
   cp "$ROOT/scripts/$name.sh" "$BASE/scripts/$name.sh"
   chmod 755 "$BASE/scripts/$name.sh"
 done

@@ -68,7 +68,7 @@ bash scripts/install.sh
 **这一步不是安装必需步骤。** 如果想自己检查：
 
 ~~~bash
-bash scripts/status.sh
+bash "$HOME/Library/Application Support/CodexCapacityGuard/scripts/status.sh"
 ~~~
 
 脚本会给出「后台运行中」「已找到启动日志」「错误日志」等结果。AI 安装时也会自己执行这一步。
@@ -104,44 +104,52 @@ tail -f ~/.local/state/codex-capacity-guard/supervisor.log
 
 ### 最简单：直接告诉有本机操作权限的 AI
 
-想停止时发送：
+**不用记住仓库在哪里。** 安装后管理脚本会被复制到每位用户自己的固定目录：
 
-> **帮我停止 codexcontinue 监工，并保持停止状态。不要退出 iTerm2，不要停止 Codex 任务。执行仓库的 scripts/stop.sh，并检查状态。**
-
-想恢复时发送：
-
-> **帮我恢复 codexcontinue 监工，执行仓库的 scripts/start.sh，检查它是否运行。不要重启我的 Codex 任务。**
-
-想知道当前状态时发送：
-
-> **帮我检查 codexcontinue 是正在运行、主动停止，还是等待 iTerm2 启动；顺便查看最近的自动续跑记录。**
-
-AI 必须能访问你的 Mac 才能执行操作。没有本机工具的普通网页 AI 无法代你操作。
-
-### 自己运行脚本（在项目目录）
-
-~~~bash
-# 主动停止，并记住停止状态
-bash scripts/stop.sh
-
-# 明确恢复监工
-bash scripts/start.sh
-
-# 查看状态与最近的自动“继续”记录
-bash scripts/status.sh
+~~~text
+~/Library/Application Support/CodexCapacityGuard/scripts/
 ~~~
 
-- 停止脚本**只停止监工**，不会退出 iTerm2，也不会停止正在执行的 Codex CLI。
-- 主动停止后，下次打开 iTerm2 **也保持停止**。
-- 恢复脚本会撤销停止标记；如果 iTerm2 还开着，监工立即启动；如果 iTerm2 已关闭，则在下次打开时启动。
-- 这与前面提到的“容量报错最多自动重试 5 次”是不同的功能。这里是用户主动暂停监控，必须明确恢复。
+这里的 `~` 表示当前用户主目录，不用硬编码用户名，也不用知道当初从 GitHub 下载到了哪里。
 
-**不在项目目录怎么办？** 安装时会把管理脚本复制到固定的本地目录 **~/Library/Application Support/CodexCapacityGuard/scripts/**。即使原来的 Git 仓库被移动或删除，仍然能在这里找到脚本；你也可以直接让 AI 去这个路径执行。
+**停止监工，直接发给 AI：**
 
-### 彻底卸载（在项目目录）
+> 帮我停止 codexcontinue 监工。在我的 Mac 上运行 `$HOME/Library/Application Support/CodexCapacityGuard/scripts/stop.sh`，再运行同目录的 status.sh 确认状态。不要退出 iTerm2，不要停止 Codex 任务，保持主动停用状态。
+
+**恢复监工，直接发给 AI：**
+
+> 帮我恢复 codexcontinue 监工。在我的 Mac 上运行 `$HOME/Library/Application Support/CodexCapacityGuard/scripts/start.sh`，再运行同目录的 status.sh 确认运行。不用重启 Codex。
+
+**查询状态或最近的续跑记录：**
+
+> 帮我读取 `$HOME/Library/Application Support/CodexCapacityGuard/scripts/status.sh` 的检查结果。只读查询，不要擅自启动已经停止的监工。
+
+以上要求 AI 已获准操作用户的 Mac。只有网页聊天、没有本机工具的 AI 无法执行。
+
+### 自己执行脚本（在任何目录都能运行）
+
+不需要进入项目目录，GitHub 仓库被移动或删除也不会影响：
 
 ~~~bash
-bash scripts/uninstall.sh
+# 主动停止，记住停用状态
+bash "$HOME/Library/Application Support/CodexCapacityGuard/scripts/stop.sh"
+
+# 明确恢复
+bash "$HOME/Library/Application Support/CodexCapacityGuard/scripts/start.sh"
+
+# 查看状态和最近自动发送“继续”的记录
+bash "$HOME/Library/Application Support/CodexCapacityGuard/scripts/status.sh"
+~~~
+
+- **停止**：只停止监工，保留 iTerm2 / Codex；重开 iTerm2 仍保持停止。
+- **恢复**：取消停用标记；如果 iTerm2 已打开就立即运行，否则下次打开时启动。
+- **查看**：只读操作，不会改变停用状态。
+- **和 Git 仓库的位置无关**：控制脚本在安装时复制到了 Mac 固定目录。
+
+### 彻底卸载（在任何目录）
+
+~~~bash
+bash "$HOME/Library/Application Support/CodexCapacityGuard/scripts/uninstall.sh"
 ~~~
 
 卸载会停止监工、移除启动配置和已安装的程序；本地运行日志默认保留，方便排查。**卸载与停止不同**：停止保留安装，可以随时恢复。
@@ -195,7 +203,7 @@ bash scripts/uninstall.sh
 **熟悉终端的用户：** 在项目目录执行：
 
 ~~~bash
-bash scripts/status.sh
+bash "$HOME/Library/Application Support/CodexCapacityGuard/scripts/status.sh"
 ~~~
 
 该脚本会显示监工是否运行，以及当前日志中最近几次自动发送的记录。

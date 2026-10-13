@@ -102,7 +102,7 @@ tail -f ~/.local/state/codex-capacity-guard/supervisor.log
 tail -f ~/.local/state/codex-capacity-guard/service.stderr.log
 ~~~
 
-The guard does **not** need to display a terminal window. Startup appears in the log. It sends no message unless the error and prompt conditions are met. You can ask an AI with local Mac access to run **bash scripts/status.sh** instead of typing these commands yourself.
+The guard does **not** need to display a terminal window. Startup appears in the log. It sends no message unless the error and prompt conditions are met. You can ask an AI with local Mac access to run the installed status script from **$HOME/Library/Application Support/CodexCapacityGuard/scripts/status.sh** instead of typing these commands yourself.
 
 ## Customize the continuation message
 
@@ -112,32 +112,43 @@ The default message is:
 
 You can add **CAPACITY_GUARD_MESSAGE** to the LaunchAgent's **EnvironmentVariables** dictionary if you prefer another one-line prompt; then reload the LaunchAgent. Don't use it to circumvent approvals.
 
-## Stop, resume, status, uninstall (AI or scripts)
+## Stop, resume, or check status (no repository needed)
 
-**Stopping manually persists across iTerm2 restarts and Mac logins.** This differs from quitting iTerm2, which only suspends the guard until you reopen the app.
+**Control scripts have a stable installed location on every user's Mac:**
 
-**Ask an AI with authorized local Mac access:**
-
-> Stop codexcontinue without closing iTerm2 or stopping any Codex task. Run scripts/stop.sh and verify the stopped state. Keep it disabled until I explicitly ask you to resume.
-
-To resume, tell the AI:
-
-> Resume codexcontinue by running scripts/start.sh, check its status, and do not interrupt the existing Codex session.
-
-To check: “Show codexcontinue's current state and recent automatic continuation events.”
-
-**Or use scripts directly from the repository:**
-
-~~~bash
-bash scripts/stop.sh      # Stop now and persist the disabled state
-bash scripts/start.sh     # Explicitly enable/resume
-bash scripts/status.sh    # Check running / stopped / waiting for iTerm2
-bash scripts/uninstall.sh # Fully uninstall; retains logs
+~~~text
+~/Library/Application Support/CodexCapacityGuard/scripts/
 ~~~
 
-Stopping leaves Codex and iTerm2 untouched. Reopening iTerm2 **will not** restart a manually stopped guard. A later explicit resume clears that preference. If iTerm2 is closed when you resume, it waits until you reopen iTerm2.
+This is relative to the user's home directory. You do not need to know where the GitHub repository was cloned.
 
-The installer also copies the three management scripts to **~/Library/Application Support/CodexCapacityGuard/scripts/**, so an AI with local Mac access can control the installed guard even after the cloned repository has been moved or removed.
+**Ask an AI that has authorized local Mac access:**
+
+> Stop codexcontinue. On my Mac run `$HOME/Library/Application Support/CodexCapacityGuard/scripts/stop.sh`, then verify using status.sh in the same directory. Do not close iTerm2 or stop Codex. Stay disabled until I explicitly resume.
+
+To resume:
+
+> Resume codexcontinue using `$HOME/Library/Application Support/CodexCapacityGuard/scripts/start.sh`, then run status.sh to verify. Don't restart my Codex task.
+
+To check:
+
+> Check `$HOME/Library/Application Support/CodexCapacityGuard/scripts/status.sh` and show the latest continuation events. Do not automatically enable a previously stopped guard.
+
+**Or run from any directory:**
+
+~~~bash
+bash "$HOME/Library/Application Support/CodexCapacityGuard/scripts/stop.sh"
+bash "$HOME/Library/Application Support/CodexCapacityGuard/scripts/start.sh"
+bash "$HOME/Library/Application Support/CodexCapacityGuard/scripts/status.sh"
+~~~
+
+Stop persists across iTerm2 restarts and Mac logins. Explicit resume reverses the opt-out. The control scripts remain available even if the original Git checkout is removed.
+
+To uninstall entirely without the original repository, run the installed script from any directory:
+
+~~~bash
+bash "$HOME/Library/Application Support/CodexCapacityGuard/scripts/uninstall.sh"
+~~~
 
 ## Tests
 
@@ -192,7 +203,7 @@ Ask an AI with access to your Mac:
 Or run the bundled service-status script, which now shows the five most recent send events found in the current/rotated logs:
 
 ~~~bash
-bash scripts/status.sh
+bash "$HOME/Library/Application Support/CodexCapacityGuard/scripts/status.sh"
 ~~~
 
 To filter raw log lines:

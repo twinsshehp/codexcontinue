@@ -13,13 +13,11 @@ Key constraints:
 
 
 AI command routing (requires authorized local Mac access):
-- **Stop / 暂停监工**: Run **bash scripts/stop.sh**, then **bash scripts/status.sh**. Do not stop iTerm2 or Codex. This stop persists until explicitly resumed.
-- **Resume / 恢复监工**: Run **bash scripts/start.sh**, then **bash scripts/status.sh**. Never do this in response to a mere status question.
-- **Status / 查看自动续跑记录**: Run **bash scripts/status.sh** read-only.
-- **Uninstall**: Only run **bash scripts/uninstall.sh** when the user explicitly requests removal.
+**Never assume the AI is in the repository after installation.** Use the stable per-user installed path:
+`$HOME/Library/Application Support/CodexCapacityGuard/scripts/`
 
-
-The installer copies management scripts to the stable local path
-**~/Library/Application Support/CodexCapacityGuard/scripts/**.
-If the checkout cannot be found, run the scripts from that installed location.
-Do not silently reinstall merely to satisfy a stop/status request.
+- **Stop / 暂停**: Run `bash "$HOME/Library/Application Support/CodexCapacityGuard/scripts/stop.sh"`; verify with status.sh in the same directory. Do not stop Codex or iTerm2.
+- **Resume / 恢复**: Run `bash "$HOME/Library/Application Support/CodexCapacityGuard/scripts/start.sh"`, then status.sh. Only on explicit request.
+- **Status / 查看记录**: Run `bash "$HOME/Library/Application Support/CodexCapacityGuard/scripts/status.sh"` read-only.
+- **Uninstall**: Run `bash "$HOME/Library/Application Support/CodexCapacityGuard/scripts/uninstall.sh"` only when the user explicitly asks. Installed control scripts are independent of the original clone.
+- If installed management scripts are missing, report that the guard may not be installed. Do NOT guess the clone path or silently reinstall.
