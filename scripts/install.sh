@@ -37,6 +37,13 @@ plist.write_bytes(plistlib.dumps({
 PY
 launchctl bootout "gui/$UID_NUM/$LABEL" >/dev/null 2>&1 || true
 launchctl bootstrap "gui/$UID_NUM" "$PLIST"
-echo "Installed and started $LABEL"
-echo "Enable iTerm2 > Settings > General > Magic > Enable Python API."
-echo "Watch: tail -f '$LOGS/supervisor.log'"
+echo "✅ 已注册并请求启动后台监工：$LABEL"
+echo "✅ 安装后不需要额外执行启动命令；下次登录 Mac 时将自动尝试运行。"
+echo "ℹ️  请在 iTerm2 > Settings > General > Magic 勾选 Enable Python API。"
+echo "正在执行只读健康检查（无须用户再次输入命令）..."
+sleep 2
+if ! bash "$ROOT/scripts/status.sh"; then
+  echo "⚠️ 后台服务状态未通过检查。请根据输出检查授权与运行日志。" >&2
+  exit 1
+fi
+echo "✅ 安装流程结束。真实容量报错的自动续跑仍需在发生时验证。"

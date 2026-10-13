@@ -20,6 +20,27 @@ When Codex CLI stops after a model-capacity error, someone has to type "continue
 
 This guard watches the specific capacity error in your active iTerm2 Codex session, then retries with a bounded delay.
 
+## Recommended: install by chatting with an AI
+
+**No terminal experience needed**—if your AI assistant can actually access your Mac's files and shell (for example, a local Codex session, or ChatGPT with an authorized local-computer connector), copy and send this message:
+
+~~~text
+Please install the GitHub project https://github.com/twinsshehp/codexcontinue
+on my Mac. Read AI_INSTALL.md and AGENTS.md from that repository first.
+With my authorization, perform the environment checks, clone the repository,
+install the tool, start its background service, and verify it is running.
+Do not merely send me shell commands to copy. Do not stop my current
+iTerm2/Codex tasks, bypass security prompts, or claim success without proof.
+Ask me only when I must approve a macOS/iTerm2 permission.
+Finally, report whether installation succeeded and what remains unverified.
+~~~
+
+**After installation the watchdog starts automatically, and attempts to start again when you log in. There is no separate manual startup step.** The service and log commands below are optional checks for developers—not extra tasks every user must perform.
+
+An ordinary web-only AI chat without local access **cannot** directly install software on your computer. The assistant must have an authorized tool to operate on your Mac.
+
+See [AI installation instructions](AI_INSTALL.md) for the exact checklist and safe validation rules.
+
 ## First: enable the iTerm2 Python API
 
 Open **iTerm2 → Settings → General → Magic**, then enable **Python API**:
@@ -48,20 +69,22 @@ You normally do not need to restart Codex. For the complete illustrated setup, s
 
 Codex Desktop, Terminal.app, tmux terminals outside iTerm2, and ChatGPT browser conversations are **not** supported.
 
-## Install
+## Manual installation (optional)
 
 ~~~bash
 git clone https://github.com/twinsshehp/codexcontinue.git
-cd codex-capacity-guard
+cd codexcontinue
 bash scripts/install.sh
 ~~~
+
+**The installer already registers and starts the service—no second launch command is needed.**
 
 The installer creates a private Python environment under
 **~/Library/Application Support/CodexCapacityGuard/** and registers a user LaunchAgent.
 
 You can keep your existing Codex CLI session running; no Codex restart is required. **Do not run multiple instances of the watchdog in parallel.**
 
-## Observe
+## Check service status (optional)
 
 ~~~bash
 # Service status
@@ -74,7 +97,7 @@ tail -f ~/.local/state/codex-capacity-guard/supervisor.log
 tail -f ~/.local/state/codex-capacity-guard/service.stderr.log
 ~~~
 
-The guard does **not** need to display a terminal window. Startup appears in the log. It sends no message unless the error and prompt conditions are met.
+The guard does **not** need to display a terminal window. Startup appears in the log. It sends no message unless the error and prompt conditions are met. You can ask an AI with local Mac access to run **bash scripts/status.sh** instead of typing these commands yourself.
 
 ## Customize the continuation message
 

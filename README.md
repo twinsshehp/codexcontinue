@@ -30,22 +30,38 @@
 
 **不会切换模型、不会自动批准命令审批、不会自动重开已退出的 Codex**。它不能保证任务最终完成，只负责特定容量错误的有限次数自动续跑。
 
-## 安装教程（从零开始）
+## 最简单的安装方法：把一句话发给 AI（推荐）
 
-### 第一步：在 iTerm2 开启 Python API
+**不懂终端、不会运行 Python 脚本也没关系。** 你只需要使用能够访问这台 Mac 的 AI 助手，例如 Mac 上的 Codex，或者连接了 Remote Desktop Commander 的 ChatGPT。**普通网页 AI 没有本机访问权限时，不能完成真实安装。**
 
-打开 **iTerm2 → Settings（设置） → General（通用） → Magic**，找到 Python API 设置：
+把下面这一整段复制到 AI 对话框：
 
-![iTerm2 的 General → Magic → Enable Python API 设置](assets/iterm2-python-api.png)
+~~~text
+请帮我在当前这台 Mac 上安装 GitHub 开源工具：
+https://github.com/twinsshehp/codexcontinue
 
-1. 勾选 **Enable Python API**，如上图。
-2. 下拉框保持 **Allow all apps to connect**；也可以按安全需求选更严格的方式（严格授权可能需要额外批准）。
-3. 如果 iTerm2 弹出连接权限窗口，请按需允许。
-4. **一般不需要重启 iTerm2 或已有的 Codex 任务。**
+请先阅读这个仓库的 AI_INSTALL.md 和 AGENTS.md，然后亲自完成检查环境、获取项目、安装依赖、安装后台监工和验证运行状态。你有本地工具就直接操作，不要只给我命令让我手动执行。不要打断我正在运行的 iTerm2 / Codex 任务；不要绕过 macOS 授权。
 
-### 第二步：下载并安装
+如果需要我亲自打开 iTerm2 的 Python API 或确认系统权限，请告诉我在哪里点，并等待我操作。安装后请检查服务和启动日志，最后用简短中文告诉我是否成功、是否登录后自动运行，以及仍有哪些限制。
+~~~
 
-在 iTerm2 的新标签页复制下面的三行命令：
+**安装完成以后，监工会自动启动，并在每次登录 Mac 后自动尝试运行。你不需要自己输入启动命令，不需要专门打开监工终端。** GitHub 页面后面的 `launchctl`、`tail` 命令只是开发者的可选检查工具，普通用户可以让 AI 代为执行。
+
+### 唯一可能需要你亲自点击的设置
+
+首次使用时，macOS / iTerm2 可能要求你授权。请打开 **iTerm2 → Settings → General → Magic**，勾选 **Enable Python API**（见图），授权提示由你自己决定是否允许：
+
+![iTerm2 中启用 Python API 的位置](assets/iterm2-python-api.png)
+
+这样 AI 就可以在已授权的范围内继续安装和验证。不需要为了安装监工而退出正在执行的 Codex。
+
+### AI 应该反馈什么？
+
+AI 会根据 [AI 安装操作说明](AI_INSTALL.md) 依次进行检查和验证。最后应告诉你 **已安装且正在运行**，或者明确指出**还需要你授权 / 缺少什么依赖**。只要后台服务启动，并不代表已经用真实的模型容量错误完成端到端测试；AI 不应夸大验证结果。
+
+## 手动安装（可选，给熟悉命令行的用户）
+
+没有可操作本机的 AI 助手，或者你更喜欢自己安装，也可以在 Mac 的 iTerm2 中运行：
 
 ~~~bash
 git clone https://github.com/twinsshehp/codexcontinue.git
@@ -53,37 +69,26 @@ cd codexcontinue
 bash scripts/install.sh
 ~~~
 
-安装脚本会：创建独立 Python 虚拟环境、安装 iTerm2 Python API 客户端、注册 macOS **LaunchAgent** 并启动后台监工。
+需要 **Python 3.10+**（包含 `venv`、`pip`）以及首次安装时的网络连接。脚本会创建独立 Python 环境、安装 iTerm2 API 客户端、注册 macOS LaunchAgent，并**立即尝试启动监工**，无须再运行第二条启动命令。
 
-前提：macOS 已安装 **Python 3.10+**（带 venv、pip）。首次安装需要联网下载依赖。
+### 可选：检查安装状态
 
-### 第三步：确认监工启动成功
+**这一步不是安装必需步骤。** 如果想自己检查：
+
+~~~bash
+bash scripts/status.sh
+~~~
+
+脚本会给出「后台运行中」「已找到启动日志」「错误日志」等结果。AI 安装时也会自己执行这一步。
+
+熟悉 macOS 的开发者还可以直接查看：
 
 ~~~bash
 launchctl print gui/$(id -u)/com.peakmain.codex-capacity-guard
-~~~
-
-输出出现 **state = running** 表示后台服务正在运行。
-
-查看监工日志：
-
-~~~bash
 tail -f ~/.local/state/codex-capacity-guard/supervisor.log
 ~~~
 
-- **Started: Codex CLI only**：已启动
-- **Capacity error on session**：发现目标报错
-- **Sent continuation**：尝试向 Codex 输入续跑指令
-
-启动成功不等于真实的自动续跑已经验证成功，需要结合 Codex 界面和日志确认。
-
-### 第四步：正常使用 Codex
-
-~~~bash
-codex
-~~~
-
-你在 iTerm2 中照常运行 Codex 即可。监工不需要单独的终端窗口，也不需要每次手动启动；macOS 用户登录后会自动尝试启动监工。
+日志里 `Started` 代表监工已启动；`Sent continuation` 代表监工向某个 Codex 会话尝试发送了续跑指令。**后者也不保证任务已完成。**
 
 ## 监工规则
 
@@ -101,7 +106,7 @@ codex
 
 默认自动发送一条英语指令，要求 Codex 检查先前进度后继续执行，避免重复已完成操作。你也可以在 LaunchAgent 的 **EnvironmentVariables** 里添加 **CAPACITY_GUARD_MESSAGE** 自定义单行文本，重载后生效。
 
-## 如何停止、重启、卸载？
+## 停止、重启、卸载（也可以直接让 AI 操作）
 
 暂停监工：
 
@@ -125,6 +130,14 @@ bash scripts/uninstall.sh
 卸载会停止监工并删除安装文件；本地运行日志默认保留，方便排查。
 
 ## 常见问题
+
+**Q：安装完成还要自己启动吗？**
+
+**不用。** 安装脚本已经启动后台服务，并配置了登录后自动运行。截图中的 `launchctl` 和 `tail` 命令只是可选检查方式，不是额外安装步骤。
+
+**Q：我不会编程，也不会用终端怎么办？**
+
+复制上面的 AI 安装提示词给一个拥有本机终端/文件操作权限的 AI，授权提示需要自己点击；剩下的安装、检测都交给 AI。
 
 **Q：我已经开启 Python API，为什么没自动继续？**
 
