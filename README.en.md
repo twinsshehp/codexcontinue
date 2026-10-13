@@ -40,7 +40,7 @@ Ask me only when I must approve a macOS/iTerm2 permission.
 Finally, report whether installation succeeded and what remains unverified.
 ~~~
 
-**After installation the watchdog starts automatically, and attempts to start again when you log in. There is no separate manual startup step.** The service and log commands below are optional checks for developers—not extra tasks every user must perform.
+**After installation the watchdog starts automatically. It exits when you quit iTerm2 (Cmd+Q), and starts automatically when you reopen iTerm2. There is no separate manual startup step.** The service and log commands below are optional checks for developers—not extra tasks every user must perform.
 
 An ordinary web-only AI chat without local access **cannot** directly install software on your computer. The assistant must have an authorized tool to operate on your Mac.
 
@@ -201,7 +201,7 @@ It runs as **one background Python process** managed by a standard macOS per-use
 
 In one observed macOS setup, the guard used about **22 MB resident memory (RSS)** and showed **0.0% CPU** at an idle instant. Usage varies with terminal window count, screen contents and host. The polling is lightweight, but not zero-cost. The watcher itself makes **no OpenAI model calls**; when it submits "continue", subsequent Codex work may use your model quota and local resources.
 
-**The watchdog does not stop when Codex stops or finishes its task**: it stays running and waits for future sessions, even when none are active. It stops on manual disable/uninstall, user logout or shutdown; if it crashes, the LaunchAgent normally restarts it (KeepAlive). It starts when the user logs in, not as a system daemon before login.
+**The watchdog remains active while iTerm2 is running**, even when Codex is idle or closed. **Quit iTerm2 (Cmd+Q)** and the watchdog stops at its next check (normally within 5 seconds); reopening iTerm2 automatically restarts it. Closing one terminal window is not the same as quitting the app. The LaunchAgent has `KeepAlive=false` and does not continually respawn it. If the watcher itself crashes, reopening iTerm2 starts it again. On login, LaunchAgent may briefly check and exit if iTerm2 is closed.
 
 The GIF is illustrative. Developers can regenerate it from the repository on macOS using **python3 scripts/render_flow.py** after installing Pillow; Pillow is not required to run the watchdog.
 

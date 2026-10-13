@@ -21,6 +21,12 @@ else
   exit 1
 fi
 
+if ! /usr/bin/pgrep -x "iTerm2" >/dev/null 2>&1; then
+  echo "✅ iTerm2 已退出：监工应当处于停止状态，不需要常驻运行。"
+  echo "   下次打开 iTerm2 时，它会通过启动脚本自动启动。"
+  exit 0
+fi
+
 RESULT="$(launchctl print "gui/$(id -u)/$LABEL" 2>&1)" || {
   echo "❌ 后台监工服务没有加载。"
   echo "$RESULT" | head -n 6
@@ -62,4 +68,4 @@ fi
 
 echo
 echo "提示：running 只证明进程正在运行；只有真实报错发生后才能验证自动续跑效果。"
-echo "成功安装后，用户不需要额外运行启动命令，登录 Mac 后会自动尝试启动。"
+echo "正常退出 iTerm2 后监工退出；再次打开 iTerm2 后会自动启动。无需手动执行命令。"

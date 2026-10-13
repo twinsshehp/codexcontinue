@@ -12,6 +12,7 @@ import json
 import logging
 import os
 import re
+import subprocess
 import sys
 import time
 from logging.handlers import RotatingFileHandler
@@ -44,6 +45,23 @@ BUSY_OR_APPROVAL = re.compile(
     re.IGNORECASE,
 )
 CODEX_JOBS = {"codex", "codex-cli"}
+
+
+def iterm2_is_running() -> bool:
+    """Only monitor while the actual iTerm2 application process exists.
+
+    This is intentionally different from checking for an open Codex session:
+    iTerm2 may stay open between Codex tasks.
+    """
+    try:
+        return subprocess.run(
+            ["/usr/bin/pgrep", "-x", "iTerm2"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        ).returncode == 0
+    except OSError:
+        return False
 
 
 def is_capacity_waiting(lines: list[str]) -> bool:
@@ -139,6 +157,9 @@ async def supervise(connection: Any) -> None:
 
     logger.info("Started: Codex CLI only; capacity errors only; maximum 5 retries")
     while True:
+        if not iterm2_is_running():
+            logger.info("iTerm2 has exited; watcher stopping")
+            return
         try:
             app = await iterm2.async_get_app(connection)
             sessions = [s for w in app.windows for tab in w.tabs for s in tab.sessions]
@@ -195,6 +216,9 @@ def main() -> None:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             raise SystemExit("Another Codex Capacity Guard is already running")
+        if not iterm2_is_running():
+            make_logger().info("iTerm2 is not running; watchdog exits without waiting")
+            return
         import iterm2
 
         iterm2.run_until_complete(supervise)

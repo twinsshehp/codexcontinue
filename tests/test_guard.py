@@ -1,11 +1,14 @@
 """Offline tests: no iTerm2 session or Codex account required."""
 import unittest
+from unittest.mock import patch
+from types import SimpleNamespace
 
 from capacity_guard import (
     RETRY_DELAYS,
     is_capacity_waiting,
     mark_sent,
     retry_decision,
+    iterm2_is_running,
 )
 
 
@@ -108,6 +111,19 @@ class RetryTests(unittest.TestCase):
         state = {}
         self.assertEqual(retry_decision(state, "idle", False, 0), (False, 0))
         self.assertEqual(state, {})
+
+
+class LifecycleTests(unittest.TestCase):
+    @patch("capacity_guard.subprocess.run")
+    def test_monitor_detects_iterm_running(self, mock_run):
+        mock_run.return_value = SimpleNamespace(returncode=0)
+        self.assertTrue(iterm2_is_running())
+        self.assertEqual(mock_run.call_args.args[0], ["/usr/bin/pgrep", "-x", "iTerm2"])
+
+    @patch("capacity_guard.subprocess.run")
+    def test_monitor_detects_iterm_exit(self, mock_run):
+        mock_run.return_value = SimpleNamespace(returncode=1)
+        self.assertFalse(iterm2_is_running())
 
 
 if __name__ == "__main__":
