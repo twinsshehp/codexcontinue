@@ -21,6 +21,13 @@ echo "Creating isolated Python environment..."
 python3 -m venv "$BASE/.venv"
 "$BASE/.venv/bin/python" -m pip install -r "$ROOT/requirements.txt"
 cp "$ROOT/capacity_guard.py" "$BASE/capacity_guard.py"
+# Keep management scripts in a stable location even if the checkout is moved
+# or deleted. AI assistants can always find them there.
+mkdir -p "$BASE/scripts"
+for name in start stop status; do
+  cp "$ROOT/scripts/$name.sh" "$BASE/scripts/$name.sh"
+  chmod 755 "$BASE/scripts/$name.sh"
+done
 BASE="$BASE" PLIST="$PLIST" LOGS="$LOGS" python3 - <<'PY'
 import os
 import plistlib
@@ -48,12 +55,17 @@ PY
 launchctl bootout "gui/$UID_NUM/$LABEL" >/dev/null 2>&1 || true
 launchctl bootstrap "gui/$UID_NUM" "$PLIST"
 echo "✅ 已注册并请求启动后台监工：$LABEL"
-echo "✅ 监工现在跟随 iTerm2：关闭 iTerm2 后退出，再打开 iTerm2 时自动启动。"
+if [[ -f "$BASE/disabled" ]]; then
+  echo "⏸️ 检测到用户此前主动停止监工；重新安装不会擅自恢复。"
+  echo "   如需恢复，请运行 bash scripts/start.sh 或让 AI 帮你恢复。"
+else
+  echo "✅ 监工现在跟随 iTerm2：关闭 iTerm2 后退出，再打开 iTerm2 时自动启动。"
+fi
 echo "✅ 不需要单独打开监工终端，也不会在 iTerm2 已关闭时持续后台轮询。"
 echo "ℹ️  请在 iTerm2 > Settings > General > Magic 勾选 Enable Python API。"
 echo "正在执行只读健康检查（无须用户再次输入命令）..."
 sleep 2
-if ! bash "$ROOT/scripts/status.sh"; then
+if ! bash "$BASE/scripts/status.sh"; then
   echo "⚠️ 后台服务状态未通过检查。请根据输出检查授权与运行日志。" >&2
   exit 1
 fi

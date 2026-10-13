@@ -26,6 +26,22 @@
 7. **报告结果。** 简洁地告诉用户“已安装、当前正常运行，并且与 iTerm2 同步启动/退出”，或者“仍需你打开 Python API / 连接本机终端”。说明**还未由真实模型容量错误验证完整自动续跑流程**时不能说已经证明端到端恢复。
 8. **不要制造容量报错。** 默认只做安装、状态及单元测试，绝不往用户现有 Codex 会话里发送测试“继续”；只有用户明确同意才做实际交互测试。
 
+## AI 停止 / 恢复 / 查看状态（用户一句话触发）
+
+用户说 **“停止监工” “停止 codexcontinue” “暂停自动继续”** 时：
+
+1. 在确认用户指的是 codexcontinue 后，直接执行仓库的 **bash scripts/stop.sh**，而不是关闭 iTerm2 或 Codex。
+2. 再执行 **bash scripts/status.sh**，确认返回“已被用户主动停止”。
+3. 明确告知用户：已停止自动续跑，即使重新打开 iTerm2 也不会自动恢复，直到明确恢复。
+
+用户说 **“恢复监工” “开启 codexcontinue”** 时：执行 **bash scripts/start.sh**，随后执行 **bash scripts/status.sh**。如果 iTerm2 当前未打开，应说明已启用、等待 iTerm2 打开，不要自行唤醒 iTerm2。
+
+用户说 **“监工还在运行吗” “查看自动续跑记录”** 时：只执行 **bash scripts/status.sh**；不要悄悄启动一个此前被停用的监工。
+
+安装程序会把 **start.sh / stop.sh / status.sh** 复制到用户目录的 **Library/Application Support/CodexCapacityGuard/scripts/**，因此无需一直保留 Git 仓库。AI 既可以从仓库运行脚本，也可以在任意目录使用此固定路径运行安装好的脚本。
+
+**停止状态必须持久化**：标记文件位于用户目录的 Library/Application Support/CodexCapacityGuard/disabled，启动脚本和 Python 监工都要尊重它；重新安装也不能擅自覆盖用户停止偏好。
+
 ## 供 AI 使用的命令（用户无需复制）
 
 检查当前服务：
@@ -43,6 +59,20 @@ python3 -m unittest discover -s tests -v
 bash scripts/install.sh
 ```
 
+主动停止（保留安装，用户明确请求时）：
+
+~~~bash
+bash scripts/stop.sh
+bash scripts/status.sh
+~~~
+
+恢复（用户明确请求时）：
+
+~~~bash
+bash scripts/start.sh
+bash scripts/status.sh
+~~~
+
 卸载（仅用户明确要求时）：
 ```bash
 bash scripts/uninstall.sh
@@ -57,7 +87,7 @@ bash scripts/uninstall.sh
 | `launchctl` 没有 running | 如果 iTerm2 已退出，这属于预期；若 iTerm2 正在运行则查看 stderr / plist 后再确认 |
 | 服务 running 但没有 Started 日志 | 检查 Python 环境和 iTerm2 API 连接情况 |
 | Started 已出现但没有自动继续 | 这是基于当前屏幕的精确容量错误匹配，先核对 Codex 当前 UI 和日志 |
-| 已有运行中的监工 | 先检查版本与配置，不要无确认停止用户服务 |
+| 已有运行中的监工 | 先检查版本与配置，不要无确认停止用户服务 |\n| 已被用户主动停止 | AI 不得擅自恢复；用户明确说“恢复”时才执行 start.sh |
 
 ## 安全提示
 

@@ -112,19 +112,32 @@ The default message is:
 
 You can add **CAPACITY_GUARD_MESSAGE** to the LaunchAgent's **EnvironmentVariables** dictionary if you prefer another one-line prompt; then reload the LaunchAgent. Don't use it to circumvent approvals.
 
-## Pause, restart, uninstall
+## Stop, resume, status, uninstall (AI or scripts)
+
+**Stopping manually persists across iTerm2 restarts and Mac logins.** This differs from quitting iTerm2, which only suspends the guard until you reopen the app.
+
+**Ask an AI with authorized local Mac access:**
+
+> Stop codexcontinue without closing iTerm2 or stopping any Codex task. Run scripts/stop.sh and verify the stopped state. Keep it disabled until I explicitly ask you to resume.
+
+To resume, tell the AI:
+
+> Resume codexcontinue by running scripts/start.sh, check its status, and do not interrupt the existing Codex session.
+
+To check: “Show codexcontinue's current state and recent automatic continuation events.”
+
+**Or use scripts directly from the repository:**
 
 ~~~bash
-# Stop until next login or manual bootstrap
-launchctl bootout gui/$(id -u)/com.peakmain.codex-capacity-guard
-
-# Start again
-launchctl bootstrap gui/$(id -u) \
-  "$HOME/Library/LaunchAgents/com.peakmain.codex-capacity-guard.plist"
-
-# Uninstall (retains diagnostic logs)
-bash scripts/uninstall.sh
+bash scripts/stop.sh      # Stop now and persist the disabled state
+bash scripts/start.sh     # Explicitly enable/resume
+bash scripts/status.sh    # Check running / stopped / waiting for iTerm2
+bash scripts/uninstall.sh # Fully uninstall; retains logs
 ~~~
+
+Stopping leaves Codex and iTerm2 untouched. Reopening iTerm2 **will not** restart a manually stopped guard. A later explicit resume clears that preference. If iTerm2 is closed when you resume, it waits until you reopen iTerm2.
+
+The installer also copies the three management scripts to **~/Library/Application Support/CodexCapacityGuard/scripts/**, so an AI with local Mac access can control the installed guard even after the cloned repository has been moved or removed.
 
 ## Tests
 

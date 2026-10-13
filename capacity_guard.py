@@ -22,6 +22,11 @@ from typing import Any
 STATE_DIR = Path.home() / ".local" / "state" / "codex-capacity-guard"
 STATE_FILE = STATE_DIR / "state.json"
 LOG_FILE = STATE_DIR / "supervisor.log"
+# Persist explicit user choice across iTerm2 restarts and Mac logins.
+DISABLED_FILE = (
+    Path.home() / "Library" / "Application Support"
+    / "CodexCapacityGuard" / "disabled"
+)
 POLL_SECONDS = 5
 RETRY_DELAYS = (30, 60, 120, 240, 300)
 CLEAR_SECONDS = 120
@@ -62,6 +67,11 @@ def iterm2_is_running() -> bool:
         ).returncode == 0
     except OSError:
         return False
+
+
+def is_explicitly_stopped() -> bool:
+    """Persist user opt-out independently of iTerm2 and Codex sessions."""
+    return DISABLED_FILE.is_file()
 
 
 def is_capacity_waiting(lines: list[str]) -> bool:
@@ -157,6 +167,9 @@ async def supervise(connection: Any) -> None:
 
     logger.info("Started: Codex CLI only; capacity errors only; maximum 5 retries")
     while True:
+        if is_explicitly_stopped():
+            logger.info("User requested stop; watcher stopping")
+            return
         if not iterm2_is_running():
             logger.info("iTerm2 has exited; watcher stopping")
             return
@@ -184,7 +197,11 @@ async def supervise(connection: Any) -> None:
                     new_lines = [
                         latest.line(i).string for i in range(latest.number_of_lines)
                     ]
-                    if is_capacity_waiting(new_lines):
+                    if (
+                        is_capacity_waiting(new_lines)
+                        and not is_explicitly_stopped()
+                        and iterm2_is_running()
+                    ):
                         await session.async_send_text(
                             message + "\n", suppress_broadcast=True
                         )
@@ -216,6 +233,9 @@ def main() -> None:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             raise SystemExit("Another Codex Capacity Guard is already running")
+        if is_explicitly_stopped():
+            make_logger().info("User opted out; watchdog exits without starting")
+            return
         if not iterm2_is_running():
             make_logger().info("iTerm2 is not running; watchdog exits without waiting")
             return

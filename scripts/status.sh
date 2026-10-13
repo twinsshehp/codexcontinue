@@ -6,6 +6,7 @@ PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 STATE_DIR="$HOME/.local/state/codex-capacity-guard"
 LOG="$STATE_DIR/supervisor.log"
 ERR="$STATE_DIR/service.stderr.log"
+DISABLED="$HOME/Library/Application Support/CodexCapacityGuard/disabled"
 
 echo "Codex Capacity Guard — 安装状态检查"
 echo "----------------------------------------"
@@ -19,6 +20,16 @@ if [[ -f "$PLIST" ]]; then
 else
   echo "❌ 没有找到后台启动配置（尚未安装，或已卸载）"
   exit 1
+fi
+
+if [[ -f "$DISABLED" ]]; then
+  if launchctl print "gui/$(id -u)/$LABEL" 2>/dev/null | grep -q 'state = running'; then
+    echo "⚠️ 已设置主动停止，但后台监工进程尚未退出，请稍后重新检查！" >&2
+    exit 2
+  fi
+  echo "⏸️ 已被用户主动停止，不会随 iTerm2 启动。"
+  echo "✅ 恢复方式：bash scripts/start.sh，或对有本机权限的 AI 说“恢复 codexcontinue”。"
+  exit 0
 fi
 
 if ! /usr/bin/pgrep -x "iTerm2" >/dev/null 2>&1; then

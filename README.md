@@ -98,28 +98,53 @@ tail -f ~/.local/state/codex-capacity-guard/supervisor.log
 
 默认自动发送一条英语指令，要求 Codex 检查先前进度后继续执行，避免重复已完成操作。你也可以在 LaunchAgent 的 **EnvironmentVariables** 里添加 **CAPACITY_GUARD_MESSAGE** 自定义单行文本，重载后生效。
 
-## 停止、重启、卸载（也可以直接让 AI 操作）
+## 如何主动停止、恢复或卸载？（支持 AI 对话和脚本）
 
-暂停监工：
+**主动停止不是退出 iTerm2。** 退出 iTerm2 时监工会暂时停止，下次启动 iTerm2 时恢复；而**主动停止会被记住**，即使关闭/重开 iTerm2，或者重新登录 Mac，也不会悄悄恢复。
+
+### 最简单：直接告诉有本机操作权限的 AI
+
+想停止时发送：
+
+> **帮我停止 codexcontinue 监工，并保持停止状态。不要退出 iTerm2，不要停止 Codex 任务。执行仓库的 scripts/stop.sh，并检查状态。**
+
+想恢复时发送：
+
+> **帮我恢复 codexcontinue 监工，执行仓库的 scripts/start.sh，检查它是否运行。不要重启我的 Codex 任务。**
+
+想知道当前状态时发送：
+
+> **帮我检查 codexcontinue 是正在运行、主动停止，还是等待 iTerm2 启动；顺便查看最近的自动续跑记录。**
+
+AI 必须能访问你的 Mac 才能执行操作。没有本机工具的普通网页 AI 无法代你操作。
+
+### 自己运行脚本（在项目目录）
 
 ~~~bash
-launchctl bootout gui/$(id -u)/com.peakmain.codex-capacity-guard
+# 主动停止，并记住停止状态
+bash scripts/stop.sh
+
+# 明确恢复监工
+bash scripts/start.sh
+
+# 查看状态与最近的自动“继续”记录
+bash scripts/status.sh
 ~~~
 
-恢复运行：
+- 停止脚本**只停止监工**，不会退出 iTerm2，也不会停止正在执行的 Codex CLI。
+- 主动停止后，下次打开 iTerm2 **也保持停止**。
+- 恢复脚本会撤销停止标记；如果 iTerm2 还开着，监工立即启动；如果 iTerm2 已关闭，则在下次打开时启动。
+- 这与前面提到的“容量报错最多自动重试 5 次”是不同的功能。这里是用户主动暂停监控，必须明确恢复。
 
-~~~bash
-launchctl bootstrap gui/$(id -u) \
-  "$HOME/Library/LaunchAgents/com.peakmain.codex-capacity-guard.plist"
-~~~
+**不在项目目录怎么办？** 安装时会把管理脚本复制到固定的本地目录 **~/Library/Application Support/CodexCapacityGuard/scripts/**。即使原来的 Git 仓库被移动或删除，仍然能在这里找到脚本；你也可以直接让 AI 去这个路径执行。
 
-彻底卸载（在项目目录运行）：
+### 彻底卸载（在项目目录）
 
 ~~~bash
 bash scripts/uninstall.sh
 ~~~
 
-卸载会停止监工并删除安装文件；本地运行日志默认保留，方便排查。
+卸载会停止监工、移除启动配置和已安装的程序；本地运行日志默认保留，方便排查。**卸载与停止不同**：停止保留安装，可以随时恢复。
 
 ## 常见问题
 

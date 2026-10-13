@@ -1,5 +1,7 @@
 """Offline tests: no iTerm2 session or Codex account required."""
 import unittest
+import tempfile
+from pathlib import Path
 from unittest.mock import patch
 from types import SimpleNamespace
 
@@ -9,6 +11,7 @@ from capacity_guard import (
     mark_sent,
     retry_decision,
     iterm2_is_running,
+    is_explicitly_stopped,
 )
 
 
@@ -114,6 +117,16 @@ class RetryTests(unittest.TestCase):
 
 
 class LifecycleTests(unittest.TestCase):
+    def test_explicit_stop_marker_persists_until_removed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            marker = Path(tmp) / "disabled"
+            with patch("capacity_guard.DISABLED_FILE", marker):
+                self.assertFalse(is_explicitly_stopped())
+                marker.touch()
+                self.assertTrue(is_explicitly_stopped())
+                marker.unlink()
+                self.assertFalse(is_explicitly_stopped())
+
     @patch("capacity_guard.subprocess.run")
     def test_monitor_detects_iterm_running(self, mock_run):
         mock_run.return_value = SimpleNamespace(returncode=0)
