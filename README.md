@@ -166,7 +166,7 @@ bash "$HOME/Library/Application Support/CodexCapacityGuard/scripts/uninstall.sh"
 
 **Q：我已经开启 Python API，为什么没自动继续？**
 
-先检查后台状态、日志是否有 Started；容量报错必须仍在 iTerm2 的当前可见屏幕。仅滚动历史中的旧报错不会触发。Codex UI 改版也可能影响识别。
+先检查后台状态、日志是否有 Started；容量报错必须仍在 iTerm2 的当前可见屏幕。仅滚动历史中的旧报错不会触发。**新版本同时支持空白的 `›` 和带有 `› Ask Codex to do anything` 占位提示的空输入框。** 续跑时会先输入文字，再**单独发送 Enter** 正式提交。其他 Codex UI 改版仍可能影响识别。
 
 **Q：Codex 桌面 App、Apple Terminal 或 ChatGPT 网页能用吗？**
 
@@ -229,7 +229,7 @@ tail -f ~/.local/state/codex-capacity-guard/supervisor.log
 
 日志最多保留一个当前文件及两个滚动备份，**不是永久审计数据库**；删除日志或日志滚动会影响可查询的历史。
 
-注意：**“Sent continuation” 只能证明监工向终端发出了输入，不代表 Codex 成功接收、恢复任务或最终完成。** 这些还需要对照 Codex 界面和实际任务结果。
+注意：**新版本 `Sent continuation (text + Enter)` 表示监工已发送续跑文字和 Enter**，但不代表模型已恢复或最终完成。**旧版日志中不带 `(text + Enter)` 的 `Sent continuation` 可能只输入了文字、并未提交**，不能把旧记录当作实际续跑成功。
 
 ### 它的原理是什么？是一个定时器吗？
 

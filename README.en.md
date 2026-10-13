@@ -181,7 +181,9 @@ The guard needs no OpenAI API key and has no separate telemetry service.
 
 - iTerm2 Python API permissions must be enabled locally.
 - If you type at the instant the guard sends text, there is a small race condition.
-- CLI UI changes may invalidate the screen heuristic.
+- The current matcher recognizes both `›` and the empty-input placeholder `› Ask Codex to do anything`; other UI changes may still break detection.
+- The guard **sends the text and then a separate Enter key**. Sending the text plus a newline in one API call can leave the message unsubmitted in Codex CLI.
+- New `Sent continuation (text + Enter)` logs mean both inputs were sent; earlier `Sent continuation` entries may only reflect text insertion. Neither guarantees successful model recovery.
 - If the error is not on the visible terminal screen, it may not be detected.
 - Five failed retries require manual attention; no automatic model switching.
 - Codex Stop hooks may not fire for server overloads, so this tool observes iTerm2 directly.

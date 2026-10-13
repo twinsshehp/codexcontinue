@@ -1,5 +1,6 @@
 """Offline tests: no iTerm2 session or Codex account required."""
 import unittest
+import asyncio
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
@@ -12,6 +13,7 @@ from capacity_guard import (
     retry_decision,
     iterm2_is_running,
     is_explicitly_stopped,
+    submit_continuation,
 )
 
 
@@ -29,6 +31,30 @@ class ScreenDetectionTests(unittest.TestCase):
         ):
             with self.subTest(status=status):
                 self.assertFalse(is_capacity_waiting([self.WARNING, status, "›"]))
+
+    def test_live_codex_placeholder_composer_is_empty(self):
+        # Copied from a real iTerm2 Python API screen on the active Mac.
+        terminal_rows = [
+            "› 停止 codexcontinue",
+            "■ Selected model is at capacity. Please try a different model.",
+            "› Ask Codex to do anything",
+            "workstation · 5h 91% left · weekly 89% left · Context 80% left",
+            "← for agents · ? for shortcuts",
+        ]
+        self.assertTrue(is_capacity_waiting(terminal_rows))
+
+    def test_capacity_warning_with_busy_afterwards_is_not_safe(self):
+        self.assertFalse(is_capacity_waiting([
+            "■ Selected model is at capacity. Please try a different model.",
+            "•Working(3m 51s • esc to interrupt)",
+            "› Ask Codex to do anything",
+        ]))
+
+    def test_placeholder_must_be_exact_not_human_text(self):
+        self.assertFalse(is_capacity_waiting([
+            self.WARNING,
+            "› Ask Codex to do anything, then delete everything",
+        ]))
 
     def test_human_draft_never_submitted(self):
         self.assertFalse(is_capacity_waiting([self.WARNING, "› 继续"]))
@@ -114,6 +140,26 @@ class RetryTests(unittest.TestCase):
         state = {}
         self.assertEqual(retry_decision(state, "idle", False, 0), (False, 0))
         self.assertEqual(state, {})
+
+
+class SubmitTests(unittest.IsolatedAsyncioTestCase):
+    async def test_continuation_uses_separate_enter_call(self):
+        class FakeSession:
+            def __init__(self):
+                self.sent = []
+
+            async def async_send_text(self, text, suppress_broadcast=False):
+                self.sent.append((text, suppress_broadcast))
+
+        session = FakeSession()
+        async def skip_wait(seconds):
+            self.assertGreater(seconds, 0)
+        with patch("capacity_guard.asyncio.sleep", side_effect=skip_wait):
+            await submit_continuation(session, "Continue previous task.")
+        self.assertEqual(
+            session.sent,
+            [("Continue previous task.", True), ("\r", True)],
+        )
 
 
 class LifecycleTests(unittest.TestCase):

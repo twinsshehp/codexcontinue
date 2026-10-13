@@ -41,7 +41,11 @@ CAPACITY_WARNING = re.compile(
     r"(?:\s*please try a different model\.)?$",
     re.IGNORECASE,
 )
-EMPTY_COMPOSER = re.compile(r"^[›❯>]\s*$")
+# Codex CLI also renders a placeholder on an EMPTY composer. This is not
+# user-entered text: observed in the actual iTerm2 Python API screen contents.
+EMPTY_COMPOSER = re.compile(
+    r"^[›❯>]\s*(?:Ask Codex to do anything)?\s*$", re.IGNORECASE
+)
 COMPOSER = re.compile(r"^[›❯>]")
 BUSY_OR_APPROVAL = re.compile(
     r"working \(|esc to interrupt|running\s+[\d.]+[km]?\s+tokens|"
@@ -156,6 +160,18 @@ def make_logger() -> logging.Logger:
     return log
 
 
+async def submit_continuation(session: Any, message: str) -> None:
+    """Enter Codex prompt text and submit with a distinct Return keystroke.
+
+    Sending message + "\\n" in one iTerm2 API call is treated as pasted
+    composer text by Codex CLI; it does NOT necessarily press Enter.
+    """
+    await session.async_send_text(message, suppress_broadcast=True)
+    # Let the TUI process the pasted text before sending the actual Enter key.
+    await asyncio.sleep(0.25)
+    await session.async_send_text("\r", suppress_broadcast=True)
+
+
 async def supervise(connection: Any) -> None:
     import iterm2
 
@@ -202,12 +218,10 @@ async def supervise(connection: Any) -> None:
                         and not is_explicitly_stopped()
                         and iterm2_is_running()
                     ):
-                        await session.async_send_text(
-                            message + "\n", suppress_broadcast=True
-                        )
+                        await submit_continuation(session, message)
                         mark_sent(state, sid, attempts, time.time())
                         logger.warning(
-                            "Sent continuation: session %s, attempt %d/5",
+                            "Sent continuation (text + Enter): session %s, attempt %d/5",
                             sid[:12], attempts + 1,
                         )
                         if attempts + 1 >= len(RETRY_DELAYS):
